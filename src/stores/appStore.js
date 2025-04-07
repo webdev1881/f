@@ -1,15 +1,16 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { db } from '../firebase';
-import { collection, doc, getDoc, setDoc, onSnapshot, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, onSnapshot, updateDoc, addDoc, Timestamp, query, orderBy, limit, getDocs } from 'firebase/firestore';
 
 export const useAppStore = defineStore('app', () => {
-  // Состояния
+  // Состояния - объявляем все переменные в начале
   const userRole = ref(null);
   const partnerRole = computed(() => userRole.value === 'Вова' ? 'Таня' : 'Вова');
   const myBalance = ref(0);
   const partnerBalance = ref(0);
   const totalBalance = computed(() => myBalance.value + partnerBalance.value);
+  const balanceHistory = ref([]); // Объявляем здесь, перед использованием
   const notificationTime = ref('19:00');
   const homeRadius = ref(500); // метров
   const partnerLocation = ref(null);
@@ -29,16 +30,16 @@ export const useAppStore = defineStore('app', () => {
     const balanceRef = doc(db, 'balance', role);
     const balanceSnap = await getDoc(balanceRef);
     
-    // Налаштування пользователя
+    // Настройки пользователя
     if (!configSnap.exists()) {
-      // Создаем начальные Налаштування пользователя
+      // Создаем начальные настройки пользователя
       await setDoc(configRef, {
         notificationTime: notificationTime.value,
         homeRadius: homeRadius.value,
         createdAt: Timestamp.now()
       });
     } else {
-      // Загружаем Налаштування
+      // Загружаем настройки
       const data = configSnap.data();
       notificationTime.value = data.notificationTime;
       homeRadius.value = data.homeRadius;
@@ -70,12 +71,35 @@ export const useAppStore = defineStore('app', () => {
   
   // Обновление баланса пользователя
   const updateMyBalance = async (newBalance) => {
-    myBalance.value = newBalance;
-    await setDoc(doc(db, 'balance', userRole.value), {
-      amount: newBalance,
-      updatedAt: Timestamp.now(),
-      updatedBy: userRole.value
-    });
+    try {
+      // Сохраняем предыдущее значение для истории
+      const previousBalance = myBalance.value;
+      
+      // Обновляем текущий баланс
+      myBalance.value = newBalance;
+      
+      // Сохраняем новое значение в Firestore
+      await setDoc(doc(db, 'balance', userRole.value), {
+        amount: newBalance,
+        updatedAt: Timestamp.now(),
+        updatedBy: userRole.value
+      });
+      
+      // Добавляем запись в историю
+      const historyEntry = {
+        timestamp: Timestamp.now(),
+        vovaBalance: userRole.value === 'Вова' ? newBalance : partnerBalance.value,
+        tanyaBalance: userRole.value === 'Таня' ? newBalance : partnerBalance.value,
+        updatedBy: userRole.value,
+        previousAmount: previousBalance,
+        newAmount: newBalance
+      };
+      
+      await addDoc(collection(db, 'balanceHistory'), historyEntry);
+    } catch (error) {
+      console.error('Ошибка при обновлении баланса:', error);
+      throw error;
+    }
   };
   
   // Обновление настроек
@@ -127,6 +151,65 @@ export const useAppStore = defineStore('app', () => {
     };
   };
   
+  // Получение истории обновлений баланса
+  const fetchBalanceHistory = async (limitCount = 20) => {
+    try {
+      const q = query(
+        collection(db, 'balanceHistory'),
+        orderBy('timestamp', 'desc'),
+        limit(limitCount)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const history = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        history.push({
+          id: doc.id,
+          timestamp: data.timestamp.toDate(),
+          vovaBalance: data.vovaBalance,
+          tanyaBalance: data.tanyaBalance,
+          updatedBy: data.updatedBy,
+          previousAmount: data.previousAmount,
+          newAmount: data.newAmount
+        });
+      });
+      
+      balanceHistory.value = history;
+    } catch (error) {
+      console.error('Ошибка при загрузке истории баланса:', error);
+    }
+  };
+  
+  // Слушатель изменений истории баланса
+  const subscribeToBalanceHistory = () => {
+    const q = query(
+      collection(db, 'balanceHistory'),
+      orderBy('timestamp', 'desc'),
+      limit(20)
+    );
+    
+    return onSnapshot(q, (querySnapshot) => {
+      const history = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        history.push({
+          id: doc.id,
+          timestamp: data.timestamp.toDate(),
+          vovaBalance: data.vovaBalance,
+          tanyaBalance: data.tanyaBalance,
+          updatedBy: data.updatedBy,
+          previousAmount: data.previousAmount,
+          newAmount: data.newAmount
+        });
+      });
+      
+      balanceHistory.value = history;
+    });
+  };
+  
   // Установка локации партнера
   const setPartnerLocation = (location) => {
     partnerLocation.value = location;
@@ -144,6 +227,7 @@ export const useAppStore = defineStore('app', () => {
     myBalance,
     partnerBalance,
     totalBalance,
+    balanceHistory,
     notificationTime,
     homeRadius,
     myLocation,
@@ -155,6 +239,8 @@ export const useAppStore = defineStore('app', () => {
     updateSettings,
     updateLocation,
     subscribeToBalance,
+    fetchBalanceHistory,
+    subscribeToBalanceHistory,
     setPartnerLocation,
     setPartnerOffline
   };

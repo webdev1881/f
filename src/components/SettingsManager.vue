@@ -165,11 +165,11 @@ const resetCache = async () => {
         );
       }
       
-      alert('Кеш успешно очищен. Приложение будет перезагружено.');
+      // alert('Кеш успешно очищен. Приложение будет перезагружено.');
       window.location.reload(true);
     } catch (error) {
       console.error('Ошибка при очистке кеша:', error);
-      alert('Произошла ошибка при очистке кеша: ' + error.message);
+      // alert('Произошла ошибка при очистке кеша: ' + error.message);
     }
   }
 };
@@ -180,7 +180,7 @@ const saveSettings = async () => {
     notificationTime: localNotificationTime.value
   });
   
-  alert('Настройки успешно сохранены!');
+  // alert('Настройки успешно сохранены!');
 };
 
 // Инициализация компонента

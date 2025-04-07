@@ -3,8 +3,8 @@
     <h2>Сімейний баланс</h2>
     
     <div class="balance-cards">
-      <div class="balance-card personal" :class="'userRole' === 'Вова' ? 'vova' : 'tanya' " >
-        <h3>баланс ({{ userRole }})</h3>
+      <div class="balance-card personal" >
+        <h3>Ваш баланс ({{ userRole }})</h3>
         <div class="balance-display">
           <span class="balance-amount">{{ formatCurrency(myBalance) }}</span>
         </div>
@@ -13,7 +13,7 @@
           <input 
             type="number" 
             v-model="newBalanceAmount" 
-            placeholder="Нова сума" 
+            placeholder="Нова сумма" 
             class="balance-input"
           />
           
@@ -22,13 +22,13 @@
             class="update-button"
             :disabled="!isValidAmount"
           >
-            Оновити
+            Оновити баланс
           </button>
         </div>
       </div>
       
-      <div class="balance-card partner"  :class="'userRole' === 'Вова' ? 'tanya' : 'vova' ">
-        <h3>баланс {{ partnerRole }}</h3>
+      <div class="balance-card partner">
+        <h3>Баланс {{ partnerRole }}</h3>
         <div class="balance-display">
           <span class="balance-amount">{{ formatCurrency(partnerBalance) }}</span>
         </div>
@@ -43,8 +43,38 @@
     </div>
     
     <div class="balance-history">
-      <h3>Історія оновлень</h3>
-      <p>Буде відображатися істория оновлень балансу</p>
+      <h3>Історія оновлень балансів</h3>
+      
+      <div v-if="balanceHistory.length > 0" class="history-list">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Баланс Вови</th>
+              <th>Баланс Тані</th>
+              <!-- <th>Загальний баланс</th>
+              <th>Хто змінив</th> -->
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="entry in balanceHistory" :key="entry.id" class="history-row">
+              <td>{{ formatDate(entry.timestamp) }}</td>
+              <td>{{ formatCurrency(entry.vovaBalance) }}</td>
+              <td>{{ formatCurrency(entry.tanyaBalance) }}</td>
+              <!-- <td>{{ formatCurrency(entry.vovaBalance + entry.tanyaBalance) }}</td> -->
+              <!-- <td>
+                <span class="updater-badge" :class="{'vova': entry.updatedBy === 'Вова', 'tanya': entry.updatedBy === 'Таня'}">
+                  {{ entry.updatedBy }}
+                </span>
+              </td> -->
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div v-else class="empty-history">
+        <p>Історія оновлень порожня</p>
+      </div>
     </div>
   </div>
 </template>
@@ -52,6 +82,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useAppStore } from '../stores/appStore';
+import * as echarts from 'echarts';
 
 const appStore = useAppStore();
 const userRole = computed(() => appStore.userRole);
@@ -59,6 +90,7 @@ const partnerRole = computed(() => appStore.partnerRole);
 const myBalance = computed(() => appStore.myBalance);
 const partnerBalance = computed(() => appStore.partnerBalance);
 const totalBalance = computed(() => appStore.totalBalance);
+const balanceHistory = computed(() => appStore.balanceHistory);
 const newBalanceAmount = ref('');
 
 // Валидация ввода
@@ -69,11 +101,22 @@ const isValidAmount = computed(() => {
 
 // Форматирование суммы
 const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('ua', {
+  return new Intl.NumberFormat('UAH', {
     style: 'currency',
     currency: 'UAH',
-    minimumFractionDigits: 0
+    minimumFractionDigits: 2
   }).format(amount);
+};
+
+// Форматирование даты и времени
+const formatDate = (date) => {
+  return new Intl.DateTimeFormat('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
 };
 
 // Обновление баланса
@@ -85,22 +128,25 @@ const updateBalanceValue = async () => {
   }
 };
 
-// Подписка на изменения баланса
+// Подписка на изменения баланса и истории
 onMounted(() => {
-  const unsubscribe = appStore.subscribeToBalance();
+  const unsubscribeBalance = appStore.subscribeToBalance();
+  const unsubscribeHistory = appStore.subscribeToBalanceHistory();
   
   // Отписка при уничтожении компонента
   return () => {
-    unsubscribe();
+    unsubscribeBalance();
+    unsubscribeHistory();
   };
 });
+
 </script>
 
 <style scoped>
 .balance-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 20px;
 }
 
 h2, h3 {
@@ -123,14 +169,14 @@ h2, h3 {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.balance-card.vova {
+.balance-card.personal {
   grid-column: 1 / 2;
   border-left: 4px solid #007bff;
 }
 
-.balance-card.tanya {
+.balance-card.partner {
   grid-column: 2 / 3;
-  border-left: 4px solid pink;
+  border-left: 4px solid #6c757d;
 }
 
 .balance-card.total {
@@ -156,14 +202,13 @@ h2, h3 {
 }
 
 .balance-form {
-  /* display: flex; */
+  display: flex;
+  flex-direction: column;
   margin: 15px 0;
   gap: 10px;
 }
 
 .balance-input {
-  width: 100%;
-  margin-bottom: 15px;
   flex: 1;
   padding: 10px;
   font-size: 16px;
@@ -172,7 +217,6 @@ h2, h3 {
 }
 
 .update-button {
-  width: 100%;
   padding: 10px 20px;
   background-color: #007bff;
   color: white;
@@ -195,11 +239,83 @@ h2, h3 {
   background-color: #f8f9fa;
   padding: 15px;
   border-radius: 8px;
+  margin-top: 30px;
 }
 
 .balance-history h3 {
   margin-top: 0;
   color: #555;
+  margin-bottom: 15px;
+}
+
+.history-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+.history-table th {
+  background-color: #e9ecef;
+  padding: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.history-row {
+  background-color: white;
+}
+
+.history-row:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.history-row td {
+  padding: 10px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.updater-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+}
+
+.updater-badge.vova {
+  background-color: #007bff;
+}
+
+.updater-badge.tanya {
+  background-color: #e83e8c;
+}
+
+.empty-history {
+  text-align: center;
+  padding: 20px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 600px) {
+  .history-table {
+    font-size: 12px;
+  }
+  
+  .history-table th,
+  .history-row td {
+    padding: 8px 5px;
+  }
 }
 
 /* Адаптивность для мобильных устройств */

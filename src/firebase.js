@@ -13,7 +13,20 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// const app = initializeApp(firebaseConfig);
+// const db = getFirestore(app);
+// const messaging = getMessaging(app)
+// export { app, db, messaging };
+
+// Проверьте, что приложение инициализируется только один раз
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+  console.log("Firebase initialized successfully");
+} catch (error) {
+  console.error("Firebase initialization error:", error);
+}
+
 const db = getFirestore(app);
-const messaging = getMessaging(app)
-export { app, db, messaging };
+
+export { app, db };
