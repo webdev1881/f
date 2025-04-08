@@ -1,39 +1,30 @@
 <template>
   <div class="balance-container">
-    <h2>Сімейний баланс</h2>
-    
+    <!-- <h2>Сімейний баланс</h2> -->
+
     <div class="balance-cards">
-      <div class="balance-card personal" >
+      <div class="balance-card personal">
         <h3>Ваш баланс ({{ userRole }})</h3>
         <div class="balance-display">
           <span class="balance-amount">{{ formatCurrency(myBalance) }}</span>
         </div>
-        
+
         <div class="balance-form">
-          <input 
-            type="number" 
-            v-model="newBalanceAmount" 
-            placeholder="Нова сумма" 
-            class="balance-input"
-          />
-          
-          <button 
-            @click="updateBalanceValue" 
-            class="update-button"
-            :disabled="!isValidAmount"
-          >
+          <input type="number" v-model="newBalanceAmount" placeholder="Нова сумма" class="balance-input" />
+
+          <button @click="updateBalanceValue" class="update-button" :disabled="!isValidAmount">
             Оновити баланс
           </button>
         </div>
       </div>
-      
+
       <div class="balance-card partner">
         <h3>Баланс {{ partnerRole }}</h3>
         <div class="balance-display">
           <span class="balance-amount">{{ formatCurrency(partnerBalance) }}</span>
         </div>
       </div>
-      
+
       <div class="balance-card total">
         <h3>Загальний баланс</h3>
         <div class="balance-display">
@@ -41,10 +32,14 @@
         </div>
       </div>
     </div>
-    
+
+    <div class="wrap">
+      <div class="mai" id="main"></div>
+    </div>
+
     <div class="balance-history">
       <h3>Історія оновлень балансів</h3>
-      
+
       <div v-if="balanceHistory.length > 0" class="history-list">
         <table class="history-table">
           <thead>
@@ -71,7 +66,7 @@
           </tbody>
         </table>
       </div>
-      
+
       <div v-else class="empty-history">
         <p>Історія оновлень порожня</p>
       </div>
@@ -132,24 +127,151 @@ const updateBalanceValue = async () => {
 onMounted(() => {
   const unsubscribeBalance = appStore.subscribeToBalance();
   const unsubscribeHistory = appStore.subscribeToBalanceHistory();
-  
+
+  initModulesChart();
   // Отписка при уничтожении компонента
   return () => {
     unsubscribeBalance();
     unsubscribeHistory();
+    // initModulesChart();
   };
 });
+
+
+
+const initModulesChart = () => {
+  var chartDom = document.getElementById('main');
+var myChart = echarts.init(chartDom);
+var option;
+
+option = {
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'shadow'
+    }
+  },
+  legend: {
+    data: ['Profit','Profit2', 'Expenses', 'Income']
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: [
+    {
+      type: 'value'
+    }
+  ],
+  yAxis: [
+    {
+      type: 'category',
+      axisTick: {
+        show: false
+      },
+      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    }
+  ],
+  series: [
+    {
+      name: 'Profit',
+      type: 'bar',
+      stack: 'Profit2',
+      barWidth: '15%',
+      barCategoryGap: '40%',
+      itemStyle:{
+        color: 'orange'
+      },
+      label: {
+        show: true,
+        position: 'inside',
+        fontSize: 10,
+        position: 'right',
+      },
+      emphasis: {
+        focus: 'series'
+      },
+      data: [200, 170, 240, 244, 200, 220, 210]
+    },
+    {
+      name: 'Profit2',
+      type: 'bar',
+      stack: 'Profit2',
+      itemStyle:{
+        color: 'orange'
+      },
+      label: {
+        show: true,
+        position: 'inside',
+        fontSize: 10,
+        position: 'left',
+      },
+      emphasis: {
+        focus: 'series'
+      },
+      data: [-200, -170, -240, -244, -200, -220, -210]
+    },
+
+
+    {
+      name: 'Income',
+      type: 'bar',
+      stack: 'Total',
+      itemStyle:{
+        color: 'pink'
+      },
+      label: {
+        show: true,
+        fontSize: 10,
+        position: 'right',
+      },
+      emphasis: {
+        focus: 'series'
+      },
+      data: [320, 302, 341, 374, 390, 450, 420]
+    },
+    {
+      name: 'Expenses',
+      type: 'bar',
+      stack: 'Total',
+      label: {
+        show: true,
+        fontSize: 10,
+        position: 'left',
+      },
+      emphasis: {
+        focus: 'series'
+      },
+      data: [-120, -132, -101, -234, -190, -230, -210]
+    }
+  ]
+};
+
+option && myChart.setOption(option);
+}
+
+
+
+
 
 </script>
 
 <style scoped>
+.mai {
+  height: 50vh;
+  /* width: 200px; */
+}
+
 .balance-container {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
 }
 
-h2, h3 {
+h2,
+h3 {
   color: #333;
   text-align: center;
   margin-bottom: 20px;
@@ -166,7 +288,7 @@ h2, h3 {
   background-color: #f8f9fa;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .balance-card.personal {
@@ -311,7 +433,7 @@ h2, h3 {
   .history-table {
     font-size: 12px;
   }
-  
+
   .history-table th,
   .history-row td {
     padding: 8px 5px;
@@ -323,7 +445,7 @@ h2, h3 {
   .balance-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .balance-card.personal,
   .balance-card.partner,
   .balance-card.total {
