@@ -3,11 +3,13 @@
     <!-- <h2>Сімейний баланс</h2> -->
 
     <div class="balance-cards">
-      <div class="balance-card personal">
+      <div class="balance-card personal" :style="`border-left: 4px solid ${myColor}`">
         <h3>Ваш баланс ({{ userRole }})</h3>
         <div class="balance-display">
           <span class="balance-amount">{{ formatCurrency(myBalance) }}</span>
         </div>
+
+        <!-- {{ balanceHistory }} -->
 
         <div class="balance-form">
           <input type="number" v-model="newBalanceAmount" placeholder="Нова сумма" class="balance-input" />
@@ -33,30 +35,37 @@
       </div>
     </div>
 
-    <div class="wrap">
+    <!-- <div class="wrap">
       <div class="mai" id="main"></div>
-    </div>
+    </div> -->
 
     <div class="balance-history">
-      <h3>Історія оновлень балансів</h3>
+      <h3>Історія оновлень</h3>
 
       <div v-if="balanceHistory.length > 0" class="history-list">
         <table class="history-table">
           <thead>
             <tr>
               <th>Дата</th>
-              <th>Баланс Вови</th>
-              <th>Баланс Тані</th>
-              <!-- <th>Загальний баланс</th>
-              <th>Хто змінив</th> -->
+              <th>Вова</th>
+              <th>Таня</th>
+              <th>Всього</th>
+              <!-- <th>Хто змінив</th> -->
             </tr>
           </thead>
           <tbody>
-            <tr v-for="entry in balanceHistory" :key="entry.id" class="history-row">
+            <tr v-for="(entry, index) in balanceHistory"  :key="entry.id" class="history-row">
               <td>{{ formatDate(entry.timestamp) }}</td>
-              <td>{{ formatCurrency(entry.vovaBalance) }}</td>
-              <td>{{ formatCurrency(entry.tanyaBalance) }}</td>
-              <!-- <td>{{ formatCurrency(entry.vovaBalance + entry.tanyaBalance) }}</td> -->
+              <td class="td_balance">
+                <div class="bln">{{ formatCurrency(entry.vovaBalance) }}</div>
+                <div :class="(entry.previousAmount - entry.vovaBalance) < 0 ? 'bln_pos' : 'bln_pre' ">{{entry.updatedBy === 'Вова' ?  formatCurrency(entry.vovaBalance -entry.previousAmount) : '-' }}</div>
+              </td>
+              <td>
+                <div class="bln">{{ formatCurrency(entry.tanyaBalance) }}</div>
+                <div :class="(entry.previousAmount - entry.tanyaBalance) < 0 ? 'bln_pos' : 'bln_pre' ">{{entry.updatedBy === 'Таня' ? formatCurrency(entry.tanyaBalance - entry.previousAmount ) : '-' }}</div>
+                <!-- {{ formatCurrency(entry.tanyaBalance) }} -->
+              </td>
+              <td class="totale">{{ formatCurrency(entry.vovaBalance + entry.tanyaBalance) }}</td>
               <!-- <td>
                 <span class="updater-badge" :class="{'vova': entry.updatedBy === 'Вова', 'tanya': entry.updatedBy === 'Таня'}">
                   {{ entry.updatedBy }}
@@ -87,6 +96,7 @@ const partnerBalance = computed(() => appStore.partnerBalance);
 const totalBalance = computed(() => appStore.totalBalance);
 const balanceHistory = computed(() => appStore.balanceHistory);
 const newBalanceAmount = ref('');
+const myColor = computed(() => appStore.myColor);
 
 // Валидация ввода
 const isValidAmount = computed(() => {
@@ -96,11 +106,14 @@ const isValidAmount = computed(() => {
 
 // Форматирование суммы
 const formatCurrency = (amount) => {
+  return amount.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 '); // разделитель символ пробел порядок 
+
+  return amount.toFixed(2);
   return new Intl.NumberFormat('UAH', {
     style: 'currency',
     currency: 'UAH',
     minimumFractionDigits: 2
-  }).format(amount);
+  }).format(amount) ;
 };
 
 // Форматирование даты и времени
@@ -108,9 +121,9 @@ const formatDate = (date) => {
   return new Intl.DateTimeFormat('ru-RU', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    // year: 'numeric',
+    // hour: '2-digit',
+    // minute: '2-digit'
   }).format(date);
 };
 
@@ -140,116 +153,120 @@ onMounted(() => {
 
 
 const initModulesChart = () => {
-  var chartDom = document.getElementById('main');
-var myChart = echarts.init(chartDom);
-var option;
+//   var chartDom = document.getElementById('main');
+// var myChart = echarts.init(chartDom);
+// var option;
+// let data = [
+  
+// ]
 
-option = {
-  tooltip: {
-    trigger: 'axis',
-    axisPointer: {
-      type: 'shadow'
-    }
-  },
-  legend: {
-    data: ['Profit','Profit2', 'Expenses', 'Income']
-  },
-  grid: {
-    left: '3%',
-    right: '4%',
-    bottom: '3%',
-    containLabel: true
-  },
-  xAxis: [
-    {
-      type: 'value'
-    }
-  ],
-  yAxis: [
-    {
-      type: 'category',
-      axisTick: {
-        show: false
-      },
-      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    }
-  ],
-  series: [
-    {
-      name: 'Profit',
-      type: 'bar',
-      stack: 'Profit2',
-      barWidth: '15%',
-      barCategoryGap: '40%',
-      itemStyle:{
-        color: 'orange'
-      },
-      label: {
-        show: true,
-        position: 'inside',
-        fontSize: 10,
-        position: 'right',
-      },
-      emphasis: {
-        focus: 'series'
-      },
-      data: [200, 170, 240, 244, 200, 220, 210]
-    },
-    {
-      name: 'Profit2',
-      type: 'bar',
-      stack: 'Profit2',
-      itemStyle:{
-        color: 'orange'
-      },
-      label: {
-        show: true,
-        position: 'inside',
-        fontSize: 10,
-        position: 'left',
-      },
-      emphasis: {
-        focus: 'series'
-      },
-      data: [-200, -170, -240, -244, -200, -220, -210]
-    },
+// option = {
+//   tooltip: {
+//     trigger: 'axis',
+//     axisPointer: {
+//       type: 'shadow'
+//     }
+//   },
+//   legend: {
+//     data: ['Profit2', 'Expenses', 'Income']
+//   },
+//   grid: {
+//     left: '3%',
+//     right: '1%',
+//     bottom: '3%',
+//     containLabel: true
+//   },
+//   xAxis: [
+//     {
+//       type: 'value'
+//     }
+//   ],
+//   yAxis: [
+//     {
+//       type: 'category',
+//       axisTick: {
+//         show: false
+//       },
+//       // data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+//       data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+//     }
+//   ],
+//   series: [
+//     {
+//       name: 'Profit',
+//       type: 'bar',
+//       stack: 'Profit2',
+//       barWidth: '15%',
+//       barCategoryGap: '40%',
+//       itemStyle:{
+//         color: 'orange'
+//       },
+//       label: {
+//         show: true,
+//         position: 'inside',
+//         fontSize: 10,
+//         position: 'right',
+//       },
+//       emphasis: {
+//         focus: 'series'
+//       },
+//       data: [200, 170, 240, 244, 200, 220, 210]
+//     },
+//     {
+//       name: 'Profit2',
+//       type: 'bar',
+//       stack: 'Profit2',
+//       itemStyle:{
+//         color: 'orange'
+//       },
+//       label: {
+//         show: true,
+//         position: 'inside',
+//         fontSize: 10,
+//         position: 'left',
+//       },
+//       emphasis: {
+//         focus: 'series'
+//       },
+//       data: [-200, -170, -240, -244, -200, -220, -210]
+//     },
 
 
-    {
-      name: 'Income',
-      type: 'bar',
-      stack: 'Total',
-      itemStyle:{
-        color: 'pink'
-      },
-      label: {
-        show: true,
-        fontSize: 10,
-        position: 'right',
-      },
-      emphasis: {
-        focus: 'series'
-      },
-      data: [320, 302, 341, 374, 390, 450, 420]
-    },
-    {
-      name: 'Expenses',
-      type: 'bar',
-      stack: 'Total',
-      label: {
-        show: true,
-        fontSize: 10,
-        position: 'left',
-      },
-      emphasis: {
-        focus: 'series'
-      },
-      data: [-120, -132, -101, -234, -190, -230, -210]
-    }
-  ]
-};
+//     {
+//       name: 'Income',
+//       type: 'bar',
+//       stack: 'Total',
+//       itemStyle:{
+//         color: 'pink'
+//       },
+//       label: {
+//         show: true,
+//         fontSize: 10,
+//         position: 'right',
+//       },
+//       emphasis: {
+//         focus: 'series'
+//       },
+//       data: [320, 302, 341, 374, 390, 450, 420]
+//     },
+//     {
+//       name: 'Expenses',
+//       type: 'bar',
+//       stack: 'Total',
+//       label: {
+//         show: true,
+//         fontSize: 10,
+//         position: 'left',
+//       },
+//       emphasis: {
+//         focus: 'series'
+//       },
+//       data: [-120, -132, -101, -234, -190, -230, -210]
+//     }
+//   ]
+// };
 
-option && myChart.setOption(option);
+// option && myChart.setOption(option);
 }
 
 
@@ -259,15 +276,26 @@ option && myChart.setOption(option);
 </script>
 
 <style scoped>
-.mai {
-  height: 50vh;
-  /* width: 200px; */
+.bln {
+  font-weight: bold;
+}
+.bln_pos {
+  font-size: 12px;
+  color: green;
+}
+.bln_pre {
+  font-size: 12px;
+  color: red;
+}
+.td_balance {
+  display: flex;
+  flex-direction: column;
 }
 
 .balance-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
+  /* padding: 20px; */
 }
 
 h2,
@@ -293,18 +321,22 @@ h3 {
 
 .balance-card.personal {
   grid-column: 1 / 2;
-  border-left: 4px solid #007bff;
+  /* border-left: 4px solid #007bff; */
 }
 
 .balance-card.partner {
   grid-column: 2 / 3;
-  border-left: 4px solid #6c757d;
+  border-left: 6px solid #6c757d;
 }
 
 .balance-card.total {
   grid-column: 1 / 3;
   background-color: #e9ecef;
-  border-left: 4px solid #28a745;
+  border-left: 6px solid #28a745;
+}
+.totale {
+  font-size: 16px;
+
 }
 
 .balance-display {
@@ -362,6 +394,7 @@ h3 {
   padding: 15px;
   border-radius: 8px;
   margin-top: 30px;
+  margin-bottom: 50px;
 }
 
 .balance-history h3 {

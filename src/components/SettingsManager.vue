@@ -4,7 +4,7 @@
     
     <div class="settings-card">
       <h3>Общие настройки</h3>
-      
+      {{ myColor }}
       <label class="setting-label">
         Время ежедневного уведомления о балансе:
         <input 
@@ -85,7 +85,7 @@ import { useAppStore } from '../stores/appStore';
 const appStore = useAppStore();
 const userRole = computed(() => appStore.userRole);
 const partnerRole = computed(() => appStore.partnerRole);
-
+const myColor = computed(() => appStore.myColor);
 const localNotificationTime = ref(appStore.notificationTime);
 const notificationStatus = ref('Проверка...');
 const selectedSound = ref('notification.mp3');

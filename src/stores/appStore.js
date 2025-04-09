@@ -16,6 +16,7 @@ export const useAppStore = defineStore('app', () => {
   const partnerLocation = ref(null);
   const myLocation = ref(null);
   const isPartnerOnline = ref(false);
+  const myColor = ref(null);
   
   // Загрузка и сохранение роли пользователя
   const setRole = async (role) => {
@@ -43,6 +44,7 @@ export const useAppStore = defineStore('app', () => {
       const data = configSnap.data();
       notificationTime.value = data.notificationTime;
       homeRadius.value = data.homeRadius;
+      myColor.value = data.color;
     }
     
     // Баланс пользователя
@@ -230,6 +232,7 @@ export const useAppStore = defineStore('app', () => {
     balanceHistory,
     notificationTime,
     homeRadius,
+    myColor,
     myLocation,
     partnerLocation,
     isPartnerOnline,

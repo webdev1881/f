@@ -259,6 +259,11 @@ body {
 }
 
 .app-footer {
+  position: fixed;
+  z-index: 2;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background-color: #343a40;
   color: white;
   text-align: center;
