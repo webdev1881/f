@@ -106,7 +106,7 @@ const isValidAmount = computed(() => {
 
 // Форматирование суммы
 const formatCurrency = (amount) => {
-  return amount.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 '); // разделитель символ пробел порядок 
+  return amount.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 '); // разделитель символ пробел порядок 
 
   return amount.toFixed(2);
   return new Intl.NumberFormat('UAH', {
@@ -405,7 +405,7 @@ h3 {
 
 .history-list {
   max-height: 400px;
-  overflow-y: auto;
+  /* overflow-y: auto;  */
 }
 
 .history-table {
