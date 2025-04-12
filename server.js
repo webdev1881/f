@@ -12,15 +12,21 @@ const app = express();
 app.use(cors());
 const server = http.createServer(app);
 
+const FAMILY_ROOM = 'family-room';
+
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
+    origin: ["https://ffff-c3e3c.web.app", "http://localhost:3000"], // Добавьте все домены
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
+io.on('connection', (socket) => {
+  // Ваш код сокетов
+});
+
 // Комната для Вовы и Тани
-const FAMILY_ROOM = 'family-room';
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
@@ -55,7 +61,17 @@ io.on('connection', (socket) => {
       role: socket.userRole
     });
   });
+  socket.on('tracking-started', (data) => {
+    console.log(`${data.role} tracking status:`, data.status);
+    socket.to(FAMILY_ROOM).emit('partner-tracking', {
+      role: data.role,
+      status: data.status
+    });
+  });
 });
+
+exports.socketio = functions.https.onRequest(app);
+
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

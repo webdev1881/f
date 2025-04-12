@@ -8,9 +8,18 @@ export const useSocketStore = defineStore('socket', () => {
   const isConnected = ref(false);
   const socketId = ref(null);
   
+
   // Инициализация соединения
   const initSocket = (serverUrl) => {
     socket.value = io(serverUrl);
+
+    socket.value = io(serverUrl, {
+      transports: ['polling'],  // Принудительное использование long polling
+      upgrade: false,           // Отключить автоматическое повышение до WebSocket
+      reconnection: true,       // Включить автоматическое переподключение
+      reconnectionAttempts: 5,  // Количество попыток
+      reconnectionDelay: 5000   // Задержка между попытками (мс)
+    });
     
     socket.value.on('connect', () => {
       console.log('Connected to socket server');
@@ -70,6 +79,18 @@ export const useSocketStore = defineStore('socket', () => {
       socket.value.disconnect();
     }
   };
+
+  const startTracking = () => {
+    if (socket.value && isConnected.value) {
+      socket.value.emit('tracking-started', { 
+        role: useAppStore().userRole,
+        status: true 
+      });
+    }
+  };
+
+
+
   
   return {
     socket,
@@ -78,6 +99,7 @@ export const useSocketStore = defineStore('socket', () => {
     initSocket,
     joinRoom,
     sendLocationUpdate,
-    disconnect
+    disconnect,
+    startTracking
   };
 });

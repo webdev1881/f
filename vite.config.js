@@ -12,7 +12,6 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: [
         'favicon.ico',
-        'icon-512.png',
         'icon-256.png',
         'notification.mp3',
         'bell.mp3',
