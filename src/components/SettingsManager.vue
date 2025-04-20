@@ -91,6 +91,81 @@ const notificationStatus = ref('Проверка...');
 const selectedSound = ref('notification.mp3');
 const audio = ref(null);
 
+// Вставьте этот код в SettingsManager.vue для дополнительной поддержки Android
+// Добавьте эту функцию в секцию <script setup>
+
+// Запрос разрешения на уведомления с проверкой для Android
+const requestAndroidNotificationPermission = async () => {
+  if (!("Notification" in window)) {
+    alert("Этот браузер не поддерживает уведомления");
+    return;
+  }
+  
+  try {
+    // Проверяем наличие необходимых разрешений для Android
+    if ('permissions' in navigator) {
+      const notificationPermissionStatus = await navigator.permissions.query({ name: 'notifications' });
+      console.log('Notification permission status:', notificationPermissionStatus.state);
+    }
+    
+    // Запрос стандартного разрешения
+    const permission = await Notification.requestPermission();
+    checkNotificationPermission(); // Обновляем статус
+    
+    if (permission === 'granted') {
+      // Регистрируем или обновляем сервис воркер для уведомлений
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        console.log('Service Worker ready for notifications:', registration);
+        
+        // Тестовое уведомление, чтобы проверить работоспособность
+        registration.showNotification('Уведомления включены', {
+          body: 'Теперь вы будете получать уведомления о приближении партнера',
+          icon: '/icon-192.png',
+          vibrate: [100, 50, 100]
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error requesting notification permission:', error);
+    alert('Не удалось запросить разрешение на уведомления: ' + error.message);
+  }
+};
+
+// Добавьте эту функцию для тестирования уведомлений на Android
+const testAndroidNotification = async () => {
+  try {
+    if ('serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      
+      registration.showNotification('Тестовое уведомление', {
+        body: 'Проверка работы уведомлений на вашем устройстве',
+        icon: '/icon-192.png',
+        vibrate: [200, 100, 200, 100, 200],
+        actions: [
+          {
+            action: 'test',
+            title: 'Проверено'
+          }
+        ]
+      });
+      
+      // Также воспроизводим звук
+      const audio = new Audio('/notification.mp3');
+      audio.play().catch(e => console.warn('Sound autoplay prevented:', e));
+    } else {
+      alert('Ваш браузер не поддерживает сервис-воркеры, необходимые для уведомлений на Android');
+    }
+  } catch (error) {
+    console.error('Error testing Android notification:', error);
+    alert('Ошибка при тестировании уведомления: ' + error.message);
+  }
+};
+
+// Затем в интерфейсе добавьте кнопки:
+// <button @click="requestAndroidNotificationPermission">Разрешить уведомления для Android</button>
+// <button @click="testAndroidNotification">Проверить уведомления на Android</button>
+
 // Класс для стилизации статуса уведомлений
 const notificationClass = computed(() => {
   if (notificationStatus.value === 'Разрешены') {
@@ -340,5 +415,18 @@ h2, h3, h4 {
   color: #6c757d;
   margin-top: 10px;
   font-style: italic;
+}
+
+.permission-button.android {
+  background-color: #28a745;
+  margin-top: 10px;
+}
+
+.permission-button.android:hover {
+  background-color: #218838;
+}
+
+.mt-10 {
+  margin-top: 10px;
 }
 </style>

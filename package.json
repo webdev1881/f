@@ -13,6 +13,8 @@
     "cors": "^2.8.5",
     "echarts": "^5.6.0",
     "firebase": "^9.23.0",
+    "firebase-cli": "^1.2.0",
+    "firebase-tools": "^14.1.0",
     "pinia": "^2.3.1",
     "register-service-worker": "^1.7.2",
     "socket.io-client": "^4.8.1",

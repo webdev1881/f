@@ -2,6 +2,16 @@
   <div class="balance-container">
     <!-- <h2>Сімейний баланс</h2> -->
 
+    <div class="test-notification-panel">
+      <h3>Тестовое уведомление</h3>
+      <button 
+        @click="sendTestNotification" 
+        class="notification-button"
+      >
+        Отправить уведомление для {{ partnerRole }}
+      </button>
+    </div>
+
     <div class="balance-cards">
       <div class="balance-card personal" :style="`border-left: 4px solid ${myColor}`">
         <h3>Ваш баланс ({{ userRole }})</h3>
@@ -87,8 +97,11 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useAppStore } from '../stores/appStore';
 import * as echarts from 'echarts';
+import { useSocketStore } from '../stores/socketStore';
 
 const appStore = useAppStore();
+
+const socketStore = useSocketStore();
 const userRole = computed(() => appStore.userRole);
 const partnerRole = computed(() => appStore.partnerRole);
 const myBalance = computed(() => appStore.myBalance);
@@ -97,6 +110,24 @@ const totalBalance = computed(() => appStore.totalBalance);
 const balanceHistory = computed(() => appStore.balanceHistory);
 const newBalanceAmount = ref('');
 const myColor = computed(() => appStore.myColor);
+
+// Отправка тестового уведомления партнеру
+const sendTestNotification = () => {
+  // Отправляем запрос через сокет
+  if (socketStore.socket && socketStore.isConnected) {
+    socketStore.socket.value.emit('test-notification', {
+      fromRole: userRole.value,
+      toRole: partnerRole.value,
+      message: `${userRole.value} отправил(а) вам тестовое уведомление!`,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Показываем подтверждение отправки
+    alert(`Уведомление для ${partnerRole.value} отправлено!`);
+  } else {
+    alert('Не удалось отправить уведомление: соединение с сервером отсутствует');
+  }
+};
 
 // Валидация ввода
 const isValidAmount = computed(() => {

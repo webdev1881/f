@@ -5,33 +5,32 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  
   plugins: [
     vue(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: [
         'favicon.ico',
+        'icon-192.png',
         'icon-512.png',
-        'icon-256.png',
         'notification.mp3',
         'bell.mp3',
         'chime.mp3'
       ],
       manifest: {
-        name: 'Сімейний додаток',
-        short_name: '',
-        description: 'Додаток для сімейного вмкористання',
+        name: 'Семейное приложение',
+        short_name: 'Семейное',
+        description: 'Приложение для семейного использования',
         theme_color: '#007bff',
         icons: [
           {
-            src: '/icon-512.png',
-            sizes: '512x512',
+            src: '/icon-192.png',
+            sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/icon-256.png',
-            sizes: '256x256',
+            src: '/icon-512.png',
+            sizes: '512x512',
             type: 'image/png'
           }
         ]
@@ -64,14 +63,18 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    host: true
+    host: true,
+    proxy: {
+      '/socket.io': {
+        target: 'http://localhost:3000',
+        ws: true,
+        changeOrigin: true
+      }
+    }
   },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    commonjsOptions: {
-      esmExternals: true 
-   },
     rollupOptions: {
       output: {
         manualChunks: {

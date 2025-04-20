@@ -10,7 +10,16 @@ export const useSocketStore = defineStore('socket', () => {
   
   // Инициализация соединения
   const initSocket = (serverUrl) => {
-    socket.value = io(serverUrl);
+    socket.value = io(serverUrl, {
+      transports: ['websocket', 'polling'],
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      extraHeaders: {
+        "my-custom-header": "abcd"
+      }
+    });
     
     socket.value.on('connect', () => {
       console.log('Connected to socket server');
