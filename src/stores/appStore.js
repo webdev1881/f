@@ -222,10 +222,6 @@ export const useAppStore = defineStore('app', () => {
   const setPartnerOffline = () => {
     isPartnerOnline.value = false;
   };
-
-  const setPartnerOnline = () => {
-    isPartnerOnline.value = true;
-  };
   
   return {
     userRole,
@@ -249,7 +245,6 @@ export const useAppStore = defineStore('app', () => {
     fetchBalanceHistory,
     subscribeToBalanceHistory,
     setPartnerLocation,
-    setPartnerOffline,
-    setPartnerOnline,
+    setPartnerOffline
   };
 });

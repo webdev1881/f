@@ -56,8 +56,6 @@ import SettingsManager from './components/SettingsManager.vue';
 const appStore = useAppStore();
 const socketStore = useSocketStore();
 
-socketStore.initSocket('https://ваш-правильный-адрес-сервера.com');
-
 // Состояние
 const isLoading = ref(true);
 const hasRole = ref(false);
@@ -137,22 +135,9 @@ const initializeApp = async () => {
       console.error('Error during service worker registration:', error);
     }
   });
-
-  
   
   // Настройка ежедневных повідомлень
   setupDailyNotification();
-
-  window.addEventListener('online', () => {
-  console.log('Приложение снова онлайн');
-  if (socketStore.socket.value) {
-    socketStore.socket.value.connect();
-  }
-});
-
-window.addEventListener('offline', () => {
-  console.log('Приложение перешло в автономный режим');
-});
   
   // Завершение загрузки
   isLoading.value = false;

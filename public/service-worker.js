@@ -6,6 +6,7 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/favicon.ico',
+  '/icon-512.png',
   '/icon-256.png',
   '/notification.mp3',
   '/bell.mp3',
@@ -81,12 +82,12 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Обработка уведомлений push
+// Обработка повідомлень push
 self.addEventListener('push', event => {
   const data = event.data.json();
   const options = {
     body: data.body,
-    icon: '/icon-192.png',
+    icon: '/icon-512.png',
     badge: '/favicon.ico',
     vibrate: [100, 50, 100],
     data: {
@@ -103,19 +104,13 @@ self.addEventListener('push', event => {
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   
-  // Обработка действий уведомления
-  if (event.action === 'open') {
-    // Действие "Открыть приложение"
-    console.log('User clicked on "Open App" action');
-  }
-  
   event.waitUntil(
     clients.matchAll({
       type: 'window'
     }).then(clientList => {
       // Если уже есть открытое окно, переключаемся на него
       for (const client of clientList) {
-        if ('focus' in client) {
+        if (client.url === '/' && 'focus' in client) {
           return client.focus();
         }
       }
