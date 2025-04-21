@@ -1,6 +1,7 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getMessaging } from 'firebase/messaging';
+import { getDatabase } from 'firebase/database';
+// import { getMessaging } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCK_9YG5-gjPzJyDG9FhEElRDg-YzHoyYQ",
@@ -9,7 +10,8 @@ const firebaseConfig = {
   storageBucket: "ffff-c3e3c.firebasestorage.app",
   messagingSenderId: "481502978134",
   appId: "1:481502978134:web:ae913f9cad7a9a77dd9bf7",
-  measurementId: "G-R1YVMQ6LFW"
+  measurementId: "G-R1YVMQ6LFW",
+  databaseURL: "https://ffff-c3e3c-default-rtdb.europe-west1.firebasedatabase.app/"
 };
 
 // Initialize Firebase
@@ -22,11 +24,13 @@ const firebaseConfig = {
 let app;
 try {
   app = initializeApp(firebaseConfig);
+// const messaging = getMessaging(app);
   console.log("Firebase initialized successfully");
 } catch (error) {
   console.error("Firebase initialization error:", error);
 }
 
 const db = getFirestore(app);
+const rtdb = getDatabase(app);
 
-export { app, db };
+export { app, db, rtdb };

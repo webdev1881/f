@@ -98,7 +98,9 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useAppStore } from '../stores/appStore';
 import * as echarts from 'echarts';
 import { useSocketStore } from '../stores/socketStore';
+import { useNotificationStore } from '../stores/notificationStore';
 
+const notificationStore = useNotificationStore();
 const appStore = useAppStore();
 
 const socketStore = useSocketStore();
@@ -171,13 +173,14 @@ const updateBalanceValue = async () => {
 onMounted(() => {
   const unsubscribeBalance = appStore.subscribeToBalance();
   const unsubscribeHistory = appStore.subscribeToBalanceHistory();
+  const unsubscribeNotifications = notificationStore.subscribeToNotifications();
 
   initModulesChart();
   // Отписка при уничтожении компонента
   return () => {
     unsubscribeBalance();
     unsubscribeHistory();
-    // initModulesChart();
+    unsubscribeNotifications();
   };
 });
 
