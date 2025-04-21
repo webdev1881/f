@@ -9,6 +9,7 @@ export const useNotificationStore = defineStore('notification', () => {
   const unreadCount = computed(() => 
     notifications.value.filter(n => !n.read).length
   );
+  const lastCheckTimestamp = ref(Date.now());
   const appStore = useAppStore();
   
   // Подписка на уведомления
@@ -18,13 +19,25 @@ export const useNotificationStore = defineStore('notification', () => {
     return realtimeService.subscribeToNotifications(
       appStore.userRole,
       (notificationsList) => {
+        // Обновляем список уведомлений
         notifications.value = notificationsList;
         
-        // Показываем уведомление в браузере, если получено новое
-        const newNotifications = notificationsList.filter(n => !n.read);
+        // Отображаем только новые уведомления, которые пришли после последней проверки
+        const currentTime = Date.now();
+        const newNotifications = notificationsList.filter(n => {
+          // Проверяем, что уведомление не прочитано и пришло после последней проверки
+          return !n.read && n.timestamp > lastCheckTimestamp.value;
+        });
+        
+        // Показываем уведомления только для новых сообщений
         if (newNotifications.length > 0) {
-          showBrowserNotification(newNotifications[0]);
+          newNotifications.forEach(notification => {
+            showBrowserNotification(notification);
+          });
         }
+        
+        // Обновляем временную метку последней проверки
+        lastCheckTimestamp.value = currentTime;
       }
     );
   };
@@ -97,10 +110,29 @@ export const useNotificationStore = defineStore('notification', () => {
     }
   };
   
+  // Сохранение временной метки последней проверки в локальное хранилище
+  const saveLastCheckTimestamp = () => {
+    localStorage.setItem('lastNotificationCheck', lastCheckTimestamp.value.toString());
+  };
+  
+  // Загрузка временной метки последней проверки из локального хранилища
+  const loadLastCheckTimestamp = () => {
+    const saved = localStorage.getItem('lastNotificationCheck');
+    if (saved) {
+      lastCheckTimestamp.value = parseInt(saved, 10);
+    }
+  };
+  
   // Очистка всех уведомлений
   const clearAllNotifications = () => {
     notifications.value = [];
   };
+  
+  // Инициализация при создании хранилища
+  loadLastCheckTimestamp();
+  
+  // Сохранение временной метки при выходе
+  window.addEventListener('beforeunload', saveLastCheckTimestamp);
   
   return {
     notifications,

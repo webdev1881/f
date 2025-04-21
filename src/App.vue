@@ -61,10 +61,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, markRaw } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, markRaw } from 'vue';
 import { useAppStore } from './stores/appStore';
 import { useSocketStore } from './stores/socketStore';
 import { register } from 'register-service-worker';
+import { useNotificationStore } from './stores/notificationStore';
 
 // Компоненты
 import RoleSelector from './components/RoleSelector.vue';
@@ -93,6 +94,7 @@ const closeNotificationPanel = () => {
 // Хранилища
 const appStore = useAppStore();
 const socketStore = useSocketStore();
+const notificationStore = useNotificationStore();
 
 // Состояние
 const isLoading = ref(true);
@@ -144,10 +146,13 @@ const setupDailyNotification = () => {
 const initializeApp = async () => {
   // Проверка сохраненной роли
   const hasExistingRole = await appStore.checkSavedRole();
+
+
+
   hasRole.value = hasExistingRole;
   
   // Инициализация соединения с сокетами
-  socketStore.initSocket('https://ffff-c3e3c.web.app/');
+  // socketStore.initSocket('https://ffff-c3e3c.web.app/');
   
   // Регистрация Service Worker для PWA
   register('/service-worker.js', {
@@ -176,6 +181,18 @@ const initializeApp = async () => {
   
   // Настройка ежедневных повідомлень
   setupDailyNotification();
+
+  if (hasExistingRole) {
+  // Подписываемся на уведомления только один раз при первой загрузке
+  const unsubscribeNotifications = notificationStore.subscribeToNotifications();
+  
+  // Сохраняем функцию отписки, чтобы избежать утечек памяти
+  onUnmounted(() => {
+    if (unsubscribeNotifications) {
+      unsubscribeNotifications();
+    }
+  });
+}
   
   // Завершение загрузки
   isLoading.value = false;
@@ -192,6 +209,8 @@ watch(() => appStore.userRole, (newRole) => {
 onMounted(() => {
   initializeApp();
 });
+
+
 </script>
 
 <style>

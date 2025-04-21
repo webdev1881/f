@@ -1,4 +1,4 @@
-import { ref, onValue, set, push, serverTimestamp } from 'firebase/database';
+import { ref, onValue, set, push, update, serverTimestamp, query, orderByChild, limitToLast } from 'firebase/database';
 import { rtdb } from '../firebase';
 
 // Сервис для работы с Firebase Realtime Database как альтернатива сокетам
@@ -10,7 +10,8 @@ const realtimeService = {
       const newNotification = {
         from: fromUser,
         message: message || 'Новое уведомление',
-        timestamp: serverTimestamp(),
+        timestamp: Date.now(), // Используем клиентское время для сравнения
+        serverTimestamp: serverTimestamp(), // Для сортировки на сервере
         read: false
       };
       
@@ -29,7 +30,8 @@ const realtimeService = {
       const locationRef = ref(rtdb, `locations/${user}`);
       await set(locationRef, {
         ...location,
-        timestamp: serverTimestamp()
+        timestamp: Date.now(),
+        serverTimestamp: serverTimestamp()
       });
       return true;
     } catch (error) {
@@ -38,22 +40,29 @@ const realtimeService = {
     }
   },
   
-  // Подписка на уведомления
+  // Подписка на уведомления с ограничением количества
   subscribeToNotifications: (user, callback) => {
-    const notificationsRef = ref(rtdb, `notifications/${user}`);
-    const unsubscribe = onValue(notificationsRef, (snapshot) => {
+    // Получаем только последние 20 уведомлений, отсортированные по времени
+    const notificationsQuery = query(
+      ref(rtdb, `notifications/${user}`),
+      orderByChild('serverTimestamp'),
+      limitToLast(20)
+    );
+    
+    const unsubscribe = onValue(notificationsQuery, (snapshot) => {
       const notifications = [];
       if (snapshot.exists()) {
         snapshot.forEach((child) => {
           notifications.push({
             id: child.key,
             ...child.val(),
-            // Преобразование серверного timestamp в объект Date
-            timestamp: child.val().timestamp 
-              ? new Date(child.val().timestamp) 
-              : new Date()
+            // Убедимся, что timestamp - число для правильного сравнения
+            timestamp: child.val().timestamp || Date.now()
           });
         });
+        
+        // Сортируем по времени, новые - сверху
+        notifications.sort((a, b) => b.timestamp - a.timestamp);
       }
       callback(notifications);
     });
@@ -78,7 +87,7 @@ const realtimeService = {
   markNotificationAsRead: async (user, notificationId) => {
     try {
       const notificationRef = ref(rtdb, `notifications/${user}/${notificationId}`);
-      await set(notificationRef, { read: true });
+      await update(notificationRef, { read: true });
       return true;
     } catch (error) {
       console.error('Error marking notification as read:', error);

@@ -9,8 +9,8 @@ const urlsToCache = [
   '/icon-192.png',
   '/icon-512.png',
   '/notification.mp3',
-  '/bell.mp3',
-  '/chime.mp3',
+  // '/bell.mp3',
+  // '/chime.mp3',
   '/manifest.json'
 ];
 
