@@ -1,7 +1,10 @@
 <template>
   <div class="location-container">
     <h2>Геолокация</h2>
-    
+
+    {{ appStore.myLocation }}
+    {{ appStore.partnerLocation }}
+
     <div v-if="userRole === 'Вова'" class="status-card">
       <h3>Статус отслеживания</h3>
       <div class="status-indicator" :class="{ 'active': isTracking }">

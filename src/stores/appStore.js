@@ -17,6 +17,9 @@ export const useAppStore = defineStore('app', () => {
   const myLocation = ref(null);
   const isPartnerOnline = ref(false);
   const myColor = ref(null);
+
+  partnerLocation.value = { "latitude": 50.4365056, "longitude": 30.5004544, "timestamp": "2025-04-20T16:03:35.506Z" }
+
   
   // Загрузка и сохранение роли пользователя
   const setRole = async (role) => {
