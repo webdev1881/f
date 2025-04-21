@@ -73,6 +73,8 @@ import BalanceManager from './components/BalanceManager.vue';
 import LocationManager from './components/LocationManager.vue';
 import SettingsManager from './components/SettingsManager.vue';
 
+import backgroundService from './services/backgroundService';
+
 
 
 // В секции импортов добавьте:
@@ -146,14 +148,9 @@ const setupDailyNotification = () => {
 const initializeApp = async () => {
   // Проверка сохраненной роли
   const hasExistingRole = await appStore.checkSavedRole();
-
-
-
   hasRole.value = hasExistingRole;
-  
   // Инициализация соединения с сокетами
   // socketStore.initSocket('https://ffff-c3e3c.web.app/');
-  
   // Регистрация Service Worker для PWA
   register('/service-worker.js', {
     ready() {
@@ -192,8 +189,14 @@ const initializeApp = async () => {
       unsubscribeNotifications();
     }
   });
+
+  try {
+    backgroundService.init();
+    console.log('Background service initialized');
+  } catch (error) {
+    console.error('Error initializing background service:', error);
+  }
 }
-  
   // Завершение загрузки
   isLoading.value = false;
 };
@@ -208,7 +211,59 @@ watch(() => appStore.userRole, (newRole) => {
 // Инициализация при монтировании
 onMounted(() => {
   initializeApp();
+  
+  // Добавляем обработчик видимости для работы в фоновом режиме
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      console.log('App is visible again');
+      
+      // Проверяем новые уведомления
+      if (appStore.userRole) {
+        notificationStore.subscribeToNotifications();
+      }
+      
+      // Возобновляем фоновые сервисы
+      if (window._backgroundServices) {
+        window._backgroundServices.updateUserData();
+      }
+    } else {
+      console.log('App is in background');
+      
+      // Сохраняем последнюю временную метку проверки
+      if (appStore.userRole) {
+        localStorage.setItem('lastCheckTimestamp', Date.now().toString());
+      }
+    }
+  });
+  
+  // Блокируем закрытие для Вовы
+  if (appStore.userRole === 'Вова') {
+    window.addEventListener('beforeunload', (e) => {
+      e.preventDefault();
+      e.returnValue = 'Приложение должно оставаться активным для отслеживания местоположения.';
+      return e.returnValue;
+    });
+  }
 });
+
+// 4. Добавьте обработчик для очистки ресурсов в секцию onUnmounted:
+onUnmounted(() => {
+  // Останавливаем фоновые сервисы при уничтожении компонента
+  if (window._backgroundServices) {
+    window._backgroundServices.stopAll();
+  }
+});
+
+// Добавьте обработчик для предотвращения закрытия вкладки/приложения
+window.addEventListener('beforeunload', (event) => {
+  if (appStore.userRole === 'Вова') {
+    // Только для роли Вова блокируем закрытие
+    event.preventDefault();
+    event.returnValue = 'Приложение должно оставаться активным для отслеживания местоположения.';
+    return event.returnValue;
+  }
+});
+
 
 
 </script>

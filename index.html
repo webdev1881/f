@@ -5,15 +5,124 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#007bff" />
   <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-  <link rel="apple-touch-icon" href="/icon-512.png" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
   <link rel="manifest" href="/manifest.json" />
-  <meta name="description" content="Сімейний баланс" />
+  <meta name="description" content="Семейное приложение для Вовы и Тани" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Сімейний додаток</title>
+  
+  <!-- Метатеги для предотвращения спящего режима -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="Семейное" />
+  <meta name="apple-mobile-web-app-title" content="Семейное" />
+  
+  <title>Семейное приложение</title>
+  
+  <!-- Стили для невидимого видео (для поддержания активности) -->
+  <style>
+    #keepalive-video {
+      position: fixed;
+      width: 1px;
+      height: 1px;
+      opacity: 0.01;
+      pointer-events: none;
+      z-index: -1000;
+    }
+  </style>
 </head>
 <body>
   <div id="app"></div>
+  
+  <!-- Невидимое видео для поддержания активности -->
+  <video id="keepalive-video" playsinline autoplay muted loop>
+    <source src="/keepalive.mp4" type="video/mp4">
+  </video>
+  
+  <!-- Невидимый аудиоэлемент для поддержания активности -->
+  <audio id="keepalive-audio" loop autoplay style="display: none;">
+    <source src="/keepalive-silent.mp3" type="audio/mp3">
+  </audio>
+  
+  <!-- Скрипт для поддержания активности -->
+  <script>
+    // Инициализация аудио и видео для поддержания активности
+    window.addEventListener('load', function() {
+      const video = document.getElementById('keepalive-video');
+      const audio = document.getElementById('keepalive-audio');
+      
+      // Функция для запуска элементов
+      function startKeepAlive() {
+        if (video) {
+          video.play().catch(e => console.log('Video autoplay prevented'));
+        }
+        if (audio) {
+          audio.play().catch(e => console.log('Audio autoplay prevented'));
+        }
+      }
+      
+      // Запуск при загрузке
+      startKeepAlive();
+      
+      // Запуск при взаимодействии пользователя
+      document.addEventListener('click', startKeepAlive);
+      document.addEventListener('touchstart', startKeepAlive);
+      
+      // Перезапуск каждые 5 минут
+      setInterval(startKeepAlive, 5 * 60 * 1000);
+      
+      // Запуск при возвращении к странице
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+          startKeepAlive();
+        }
+      });
+      
+      // Запрос WakeLock API
+      if ('wakeLock' in navigator) {
+        let wakeLock = null;
+        
+        async function requestWakeLock() {
+          try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLock.addEventListener('release', () => {
+              console.log('Wake Lock released');
+              // Повторный запрос при освобождении
+              setTimeout(requestWakeLock, 1000);
+            });
+            console.log('Wake Lock active');
+          } catch (err) {
+            console.error('Wake Lock error:', err);
+          }
+        }
+        
+        // Запрос при загрузке
+        requestWakeLock();
+        
+        // Повторный запрос при возобновлении видимости
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            requestWakeLock();
+          }
+        });
+      }
+    });
+
+
+    // Инициализация NoSleep
+  document.addEventListener('DOMContentLoaded', function() {
+    const noSleep = new NoSleep();
+    
+    // Включаем NoSleep при взаимодействии пользователя
+    document.addEventListener('click', function enableNoSleep() {
+      document.removeEventListener('click', enableNoSleep);
+      noSleep.enable();
+      console.log('NoSleep enabled');
+    }, false);
+  });
+
+
+  </script>
+  
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

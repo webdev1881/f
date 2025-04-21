@@ -8,7 +8,7 @@
         @click="sendTestNotification" 
         class="notification-button"
       >
-        Отправить уведомление для {{ partnerRole }}
+        v3 Отправить уведомление для {{ partnerRole }}
       </button>
     </div>
 
@@ -19,7 +19,9 @@
           <span class="balance-amount">{{ formatCurrency(myBalance) }}</span>
         </div>
 
-        <!-- {{ balanceHistory }} -->
+        {{ appStore.myLocation }}
+        <hr>
+        {{ appStore.partnerLocation }}
 
         <div class="balance-form">
           <input type="number" v-model="newBalanceAmount" placeholder="Нова сумма" class="balance-input" />
