@@ -1,9 +1,7 @@
-
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
 import { register } from 'register-service-worker';
-import * as echarts from 'echarts';
 
 // Создание хранилища Pinia
 const pinia = createPinia();
@@ -40,7 +38,14 @@ const app = createApp(App);
 
 // Использование Pinia
 app.use(pinia);
-app.use(echarts);
+
+// Импорт хранилищ для инициализации
+import { useAppStore } from './stores/appStore';
+import { useNotificationStore } from './stores/notificationStore';
+
+// Инициализация хранилищ
+const appStore = useAppStore();
+const notificationStore = useNotificationStore();
 
 // Монтирование приложения
 app.mount('#app');

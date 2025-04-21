@@ -112,22 +112,22 @@ const newBalanceAmount = ref('');
 const myColor = computed(() => appStore.myColor);
 
 // Отправка тестового уведомления партнеру
-const sendTestNotification = () => {
-  // Отправляем запрос через сокет
-  if (socketStore.socket && socketStore.isConnected) {
-    socketStore.socket.value.emit('test-notification', {
-      fromRole: userRole.value,
-      toRole: partnerRole.value,
-      message: `${userRole.value} отправил(а) вам тестовое уведомление!`,
-      timestamp: new Date().toISOString()
-    });
+// const sendTestNotification = () => {
+//   // Отправляем запрос через сокет
+//   if (socketStore.socket && socketStore.isConnected) {
+//     socketStore.socket.value.emit('test-notification', {
+//       fromRole: userRole.value,
+//       toRole: partnerRole.value,
+//       message: `${userRole.value} отправил(а) вам тестовое уведомление!`,
+//       timestamp: new Date().toISOString()
+//     });
     
-    // Показываем подтверждение отправки
-    alert(`Уведомление для ${partnerRole.value} отправлено!`);
-  } else {
-    alert('Не удалось отправить уведомление: соединение с сервером отсутствует');
-  }
-};
+//     // Показываем подтверждение отправки
+//     alert(`Уведомление для ${partnerRole.value} отправлено!`);
+//   } else {
+//     alert('Не удалось отправить уведомление: соединение с сервером отсутствует');
+//   }
+// };
 
 // Валидация ввода
 const isValidAmount = computed(() => {
@@ -299,6 +299,22 @@ const initModulesChart = () => {
 
 // option && myChart.setOption(option);
 }
+
+
+// Отправка тестового уведомления партнеру
+const sendTestNotification = async () => {
+  // Создаем персонализированное сообщение
+  const message = `Привет! Это тестовое уведомление от ${userRole.value}.`;
+  
+  // Отправляем уведомление через сервис
+  const success = await notificationStore.sendNotificationToPartner(message);
+  
+  if (success) {
+    alert(`Уведомление отправлено ${partnerRole.value}!`);
+  } else {
+    alert('Не удалось отправить уведомление. Пожалуйста, попробуйте еще раз.');
+  }
+};
 
 
 

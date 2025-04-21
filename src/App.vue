@@ -16,6 +16,26 @@
         <!-- <h2>Баланс</h2> -->
         <div class="user-role">{{ userRole }}</div>
       </header>
+
+      <div class="user-info">
+  <div class="user-role">{{ userRole }}</div>
+  <div 
+    v-if="unreadNotifications > 0" 
+    class="notification-badge"
+    @click="toggleNotificationPanel"
+  >
+    {{ unreadNotifications }}
+  </div>
+  <div 
+    v-else 
+    class="notification-icon"
+    @click="toggleNotificationPanel"
+  >
+    🔔
+  </div>
+</div>
+
+
       
       <nav class="app-nav">
         <button 
@@ -51,6 +71,24 @@ import RoleSelector from './components/RoleSelector.vue';
 import BalanceManager from './components/BalanceManager.vue';
 import LocationManager from './components/LocationManager.vue';
 import SettingsManager from './components/SettingsManager.vue';
+
+
+
+// В секции импортов добавьте:
+import NotificationPanel from './components/NotificationPanel.vue';
+
+// Добавьте состояние в <script setup>:
+const isNotificationPanelOpen = ref(false);
+
+// Добавьте функцию для открытия/закрытия панели:
+const toggleNotificationPanel = () => {
+  isNotificationPanelOpen.value = !isNotificationPanelOpen.value;
+};
+
+// Добавьте функцию для закрытия панели:
+const closeNotificationPanel = () => {
+  isNotificationPanelOpen.value = false;
+};
 
 // Хранилища
 const appStore = useAppStore();
@@ -161,6 +199,16 @@ onMounted(() => {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+.notification-icon {
+  cursor: pointer;
+  margin-left: 10px;
+  font-size: 18px;
+}
+
+.notification-badge {
+  cursor: pointer;
 }
 
 body {

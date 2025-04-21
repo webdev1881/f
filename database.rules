@@ -1,0 +1,21 @@
+// Файл database.rules.json для Realtime Database
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "notifications": {
+      "$user": {
+        ".read": true,
+        ".write": true,
+        ".indexOn": ["timestamp", "read"]
+      }
+    },
+    "locations": {
+      "$user": {
+        ".read": true,
+        ".write": true,
+        ".indexOn": ["timestamp"]
+      }
+    }
+  }
+}
