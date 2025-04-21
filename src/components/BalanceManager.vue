@@ -24,7 +24,7 @@
         {{ appStore.partnerLocation }}
 
         <div class="balance-form">
-          <input type="number" v-model="newBalanceAmount" placeholder="Нова сумма" class="balance-input" />
+          <input type="number" v-on:keyup.enter="updateBalanceValue" v-model="newBalanceAmount" placeholder="Нова сумма" class="balance-input" />
 
           <button @click="updateBalanceValue" class="update-button" :disabled="!isValidAmount">
             Оновити баланс
